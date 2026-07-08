@@ -765,20 +765,24 @@
   function drawBg(){
     var im = imgs.bg || DEF.bg;
     if(im){
+      // срезаем крайние столбцы (артефакты сжатия) и рисуем плитки с нахлёстом,
+      // чтобы на стыке не было ни щели, ни полосы
+      var crop = Math.max(2, Math.round(im.width*0.004));
+      var sw = im.width - crop*2;
       var scale = H / im.height;
-      var tw = im.width * scale;
+      var tw = sw * scale;
       var off = (bgScroll % tw + tw) % tw;
       var k = Math.floor(bgScroll / tw);
-      // каждая вторая плитка зеркалится, чтобы не было шва на стыке
       for(var x = -off; x < W; x += tw, k++){
-        if(((k % 2) + 2) % 2 === 1){
-          ctx.save();
+        var flip = ((k % 2) + 2) % 2 === 1;   // каждая вторая — зеркалом
+        ctx.save();
+        if(flip){
           ctx.translate(x + tw/2, 0); ctx.scale(-1, 1);
-          ctx.drawImage(im, -tw/2, 0, tw, H);
-          ctx.restore();
+          ctx.drawImage(im, crop, 0, sw, im.height, -tw/2 - 1.5, 0, tw + 3, H);
         } else {
-          ctx.drawImage(im, x, 0, tw, H);
+          ctx.drawImage(im, crop, 0, sw, im.height, x - 1.5, 0, tw + 3, H);
         }
+        ctx.restore();
       }
     } else {
       var g = ctx.createLinearGradient(0,0,0,H);
