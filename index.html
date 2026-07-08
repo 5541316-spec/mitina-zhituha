@@ -341,11 +341,19 @@
   var W = 0, H = 0, DPR = 1;
   function resize(){
     var r = gamebox.getBoundingClientRect();
+    if(r.width < 10 || r.height < 10) return;   // экран игры скрыт — не сбивать размеры
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = r.width; H = r.height;
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    // герой всегда в масштабе текущего экрана
+    if(player){
+      player.r = Math.max(20, H*0.05);
+      player.x = W*0.25;
+      if(player.y > floorY() - player.r) player.y = floorY() - player.r;
+      if(player.y < player.r) player.y = player.r;
+    }
   }
   window.addEventListener('resize', resize);
 
@@ -567,6 +575,7 @@
     finishOv.classList.remove('hidden');
   }
   $('againbtn').addEventListener('click', function(){
+    resize();
     resetRound();
     mode = 'ready';
     finishOv.classList.add('hidden');
