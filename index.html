@@ -156,9 +156,10 @@
     .wrap{padding:14px 10px 24px;}
     #gamescreen .gamebox{position:fixed;inset:0;width:100vw;height:100dvh;
       max-height:none;aspect-ratio:auto;border:none;border-radius:0;z-index:40;}
-    .hud{padding-right:64px;padding-top:calc(env(safe-area-inset-top, 0px) + 10px);}
-    .hudbtns{flex-wrap:wrap;justify-content:flex-end;max-width:150px;row-gap:6px;}
-    .hudbtn{padding:7px 9px;font-size:12px;}
+    .hud{padding-right:60px;padding-top:calc(env(safe-area-inset-top, 0px) + 4px);}
+    .hudbtns{flex-wrap:nowrap;}
+    .hudbtn{padding:5px 8px;font-size:12px;white-space:nowrap;}
+    .closebtn{top:calc(env(safe-area-inset-top, 0px) + 4px);width:36px;height:36px;font-size:17px;}
   }
 </style>
 
