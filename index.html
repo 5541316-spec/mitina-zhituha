@@ -1,4 +1,8 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0a20">
 <title>Митина житуха</title>
 <style>
   :root{
@@ -111,14 +115,38 @@
   @media (prefers-reduced-motion: reduce){
     .upcard,.bigbtn{transition:none;}
   }
+
+  /* стартовый экран — только правила и кнопка, без карточек замены */
+  .grid{display:none;}
+
+  /* крестик закрытия игры */
+  .closebtn{position:fixed;z-index:60;
+    top:calc(env(safe-area-inset-top, 0px) + 10px);right:12px;
+    width:42px;height:42px;border-radius:50%;
+    background:rgba(13,10,32,.8);border:2px solid var(--coral);color:var(--coral);
+    font-size:20px;font-weight:900;line-height:1;
+    display:flex;align-items:center;justify-content:center;}
+  .closebtn:active{transform:scale(.92);}
+
+  /* мобильный: игра на весь экран телефона */
+  @media (max-width: 820px), (pointer: coarse){
+    .wrap{padding:14px 10px 24px;}
+    #gamescreen .gamebox{position:fixed;inset:0;width:100vw;height:100dvh;
+      max-height:none;aspect-ratio:auto;border:none;border-radius:0;z-index:40;}
+    .hud{padding-right:64px;padding-top:calc(env(safe-area-inset-top, 0px) + 10px);}
+    .hudbtns{flex-wrap:wrap;justify-content:flex-end;max-width:150px;row-gap:6px;}
+    .hudbtn{padding:7px 9px;font-size:12px;}
+  }
 </style>
 
 <div class="wrap">
+  <button class="closebtn" id="closebtn" aria-label="Закрыть игру" title="Закрыть игру">✕</button>
+
   <!-- ================= ЭКРАН НАСТРОЙКИ ================= -->
   <div class="stage" id="setupscreen">
     <header>
       <div class="title">Митина житуха</div>
-      <p class="sub">Лети над Москвой, собирай золото и уворачивайся от неприятностей. Раунд — минута; сколько монет удержишь до финального свистка, столько и твои. Все картинки уже в игре — можно сразу лететь или заменить их своими.</p>
+      <p class="sub">Лети над Москвой, собирай золото и уворачивайся от неприятностей. Раунд — минута; сколько монет удержишь до финального свистка, столько и твои.</p>
     </header>
 
     <div class="rules">
@@ -177,6 +205,7 @@
           <div class="best" id="bestlabel">рекорд: 0</div>
         </div>
         <div class="hudbtns">
+          <button class="hudbtn" id="fsbtn" aria-label="Во весь экран" title="Во весь экран">⛶</button>
           <button class="hudbtn" id="soundbtn" aria-label="Звук">🔊 Звук</button>
           <button class="hudbtn" id="pausebtn" aria-label="Пауза">⏸ Пауза</button>
           <button class="hudbtn" id="exitbtn" aria-label="К настройке">⚙ Настройка</button>
@@ -239,6 +268,7 @@
   $('ruleicon-coin').src = SRC.coin;
   $('ruleicon-vk').src = SRC.vk;
   $('ruleicon-trap').src = SRC.trap;
+  $('ruleicon-boss').src = SRC.boss;
   $('coinicon').src = SRC.coin;
   $('coinicon2').src = SRC.coin;
 
@@ -437,10 +467,39 @@
     if(e.code==='ArrowDown' || e.code==='KeyS'){ if(keyDir > 0) keyDir = 0; }
   });
 
+  // ---------- полный экран и закрытие ----------
+  function goFullscreen(){
+    var d = document.documentElement;
+    try{
+      if(d.requestFullscreen) d.requestFullscreen().catch(function(){});
+      else if(d.webkitRequestFullscreen) d.webkitRequestFullscreen();
+    }catch(e){}
+  }
+  $('fsbtn').addEventListener('click', function(){
+    if(document.fullscreenElement || document.webkitFullscreenElement){
+      try{
+        if(document.exitFullscreen) document.exitFullscreen();
+        else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }catch(e){}
+    } else goFullscreen();
+  });
+  document.addEventListener('fullscreenchange', function(){ setTimeout(resize, 100); });
+  $('closebtn').addEventListener('click', function(){
+    window.close();
+    setTimeout(function(){
+      if(!document.hidden){
+        if(history.length > 1) history.back();
+        else location.href = 'about:blank';
+      }
+    }, 200);
+  });
+
   // ---------- экраны ----------
   $('startbtn').addEventListener('click', function(){
     setupScreen.style.display = 'none';
     gameScreen.style.display = 'flex';
+    // на телефоне сразу разворачиваем во весь экран
+    if(window.matchMedia && matchMedia('(pointer: coarse)').matches) goFullscreen();
     resize(); resetRound();
     mode = 'ready';
     pauseOv.classList.add('hidden');
