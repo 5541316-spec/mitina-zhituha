@@ -128,6 +128,16 @@
     display:flex;align-items:center;justify-content:center;}
   .closebtn:active{transform:scale(.92);}
 
+  /* экранные стрелки управления в правом нижнем углу */
+  .touchctrl{position:absolute;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);
+    display:flex;flex-direction:column;gap:12px;z-index:45;}
+  .tbtn{width:68px;height:68px;border-radius:50%;
+    background:rgba(13,10,32,.72);border:2px solid var(--gold);color:var(--gold);
+    font-size:26px;font-weight:900;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+  .tbtn:active{background:var(--gold);color:#3a2a00;transform:scale(.94);}
+
   /* мобильный: игра горизонтальная — в портрете просим повернуть телефон */
   .rotatehint{display:none;}
   @media (pointer: coarse) and (orientation: portrait){
@@ -170,7 +180,7 @@
     </div>
 
     <div class="startrow"><button class="bigbtn" id="startbtn">Полетели!</button></div>
-    <p class="hint">Управление: <kbd>↑</kbd> и <kbd>↓</kbd> — выше и ниже. На телефоне просто веди пальцем по экрану.</p>
+    <p class="hint">Управление — <b>только стрелками ▲ ▼ в правом нижнем углу экрана</b> (на клавиатуре — <kbd>↑</kbd> и <kbd>↓</kbd>). Остальной экран героя не двигает.</p>
   </div>
 
   <!-- ================= ЭКРАН ИГРЫ ================= -->
@@ -192,10 +202,15 @@
 
       <div class="overlay hidden" id="readyoverlay">
         <h2>Готов?</h2>
-        <p>Нажми <kbd>↑ или ↓</kbd> (или тапни по экрану) — и полёт начнётся.<br>Герой летит сам, ты управляешь только высотой.</p>
+        <p>Жми стрелки <b>▲ ▼</b> в правом нижнем углу (или <kbd>↑ ↓</kbd> на клавиатуре) — и полёт начнётся.<br>Герой летит сам: стрелки ведут его выше и ниже, остальной экран не работает.</p>
       </div>
 
       <div class="timer" id="timer">1:00</div>
+
+      <div class="touchctrl">
+        <button class="tbtn" id="btnup" aria-label="Выше">▲</button>
+        <button class="tbtn" id="btndown" aria-label="Ниже">▼</button>
+      </div>
 
       <div class="overlay hidden" id="pauseoverlay">
         <h2>Пауза</h2>
@@ -365,24 +380,27 @@
   function speedNow(){ return 150 + Math.min(elapsed*2, 60); }
   function floorY(){ return H*0.93; }
 
-  // ---------- ввод: стрелки вверх/вниз или палец ----------
-  var keyDir = 0, touchY = null;
+  // ---------- ввод: ТОЛЬКО стрелки — экранные ▲▼ и клавиатура ----------
+  var keyDir = 0;
   function startFlight(){
     if(mode === 'ready'){ mode = 'play'; readyOv.classList.add('hidden'); }
   }
-  gamebox.addEventListener('pointerdown', function(e){
-    if(e.target.closest('.hudbtn') || e.target.closest('#pauseoverlay') || e.target.closest('#finishoverlay') || e.target.closest('.rotatehint')) return;
-    startFlight();
-    var r = gamebox.getBoundingClientRect();
-    touchY = e.clientY - r.top;
-  });
-  gamebox.addEventListener('pointermove', function(e){
-    if(touchY === null) return;
-    var r = gamebox.getBoundingClientRect();
-    touchY = e.clientY - r.top;
-  });
-  window.addEventListener('pointerup', function(){ touchY = null; });
-  window.addEventListener('pointercancel', function(){ touchY = null; });
+  function bindArrow(id, dir){
+    var el = $(id);
+    el.addEventListener('pointerdown', function(e){
+      e.preventDefault();
+      startFlight();
+      keyDir = dir;
+      try{ el.setPointerCapture(e.pointerId); }catch(err){}
+    });
+    function release(){ if(keyDir === dir) keyDir = 0; }
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+    el.addEventListener('lostpointercapture', release);
+    el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  }
+  bindArrow('btnup', -1);
+  bindArrow('btndown', 1);
   window.addEventListener('keydown', function(e){
     if(mode==='setup') return;
     if(e.code==='ArrowUp' || e.code==='KeyW' || e.code==='ArrowDown' || e.code==='KeyS' || e.code==='Space'){
@@ -603,13 +621,9 @@
     var sp = speedNow();
     bgScroll += sp*dt;
 
-    // герой всегда летит; стрелки или палец задают высоту
+    // герой всегда летит; высотой управляют только стрелки
     var maxV = H*0.55, targetV = 0;
     if(keyDir !== 0) targetV = keyDir*maxV;
-    else if(touchY !== null){
-      var dyt = touchY - player.y;
-      targetV = Math.max(-maxV, Math.min(maxV, dyt*4));
-    }
     player.vy += (targetV - player.vy)*Math.min(1, dt*8);
     player.y += player.vy*dt;
     player.angle = Math.max(-0.25, Math.min(0.25, player.vy/(maxV*2.2)));
