@@ -180,7 +180,7 @@
       <div class="rule sad"><img id="ruleicon-vk" alt="VK Fest"><span><b>VK Fest</b> — заденешь, и герой остановится и будет плакать 2 секунды. Сам гоняется за героем!</span></div>
       <div class="rule bad"><img id="ruleicon-trap" alt="СКА"><span><b>Герб СКА</b> — врежешься, и все заработанные монетки сгорят. Тоже охотится за тобой — маневрируй!</span></div>
       <div class="rule bad"><img id="ruleicon-boss" alt="СИДР"><span><b>СИДР</b> — гигант с автоматом: прилетает, ржёт и стреляет словами «Косяк». Каждое попадание — минус монетка. Уворачивайся!</span></div>
-      <div class="rule sad"><img id="ruleicon-vasia" alt="VASIA"><span><b>VASIA</b> — нависает сверху и грозно орёт: Митя пугается и 5 секунд летит в 3 раза быстрее. Держись крепче!</span></div>
+      <div class="rule sad"><img id="ruleicon-vasia" alt="VASIA"><span><b>VASIA</b> — нависает сверху и грозно орёт: Митя пугается и 5 секунд летит в 2 раза быстрее. Держись крепче!</span></div>
     </div>
 
     <div class="startrow"><button class="bigbtn" id="startbtn">Полетели!</button></div>
@@ -402,7 +402,7 @@
 
   function speedNow(){
     var s = 150 + Math.min(elapsed*2, 60);
-    return boost > 0 ? s*3 : s;   // VASIA наорал — Митя торопится
+    return boost > 0 ? s*2 : s;   // VASIA наорал — Митя торопится
   }
   function floorY(){ return H*0.93; }
 
@@ -756,7 +756,7 @@
         vasiaCount++;
         boost = 5;                          // Митя торопится 5 секунд
         sndYell();
-        floatText(player.x, player.y - player.r*2.2, '×3!', '#ffc53d', true);
+        floatText(player.x, player.y - player.r*2.2, '×2!', '#ffc53d', true);
       }
     } else if(vasia){
       vasia.t += dt;
